@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Matching Game - แบบลากเส้นจับคู่</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            user-select: none;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 25px;
+        }
+        .instructions {
+            background-color: #eef2f7;
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            position: sticky;
+            top: 10px;
+            background: rgba(255,255,255,0.95);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-check {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .btn-check:hover { background-color: #27ae60; }
+        .btn-shuffle {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-shuffle:hover { background-color: #2980b9; }
+        .score-display {
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            color: #2c3e50;
+        }
+        .game-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            position: relative;
+        }
+        @media (max-width: 900px) {
+            .game-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            svg { display: none; } /* Hide lines on small screen if layout wraps */
+        }
+        .column-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #34495e;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #bdc3c7;
+            margin-bottom: 15px;
+        }
+        .word-list, .def-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .word-item, .def-item {
+            display: flex;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 12px 15px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .word-item:hover, .def-item:hover {
+            border-color: #3498db;
+            background-color: #f0f7fc;
+        }
+        .word-label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .word-type {
+            font-style: italic;
+            color: #95a5a6;
+            font-size: 13px;
+            margin-left: 8px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            background-color: #bdc3c7;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+        }
+        .word-item .dot {
+            right: -6px;
+        }
+        .def-item .dot {
+            left: -6px;
+        }
+        /* Connection styles */
+        .selected {
+            background-color: #e8f4fd !important;
+            border-color: #3498db !important;
+        }
+        .selected .dot {
+            background-color: #3498db !important;
+            box-shadow: 0 0 8px #3498db;
+        }
+        .matched {
+            background-color: #f1f2f6;
+            border-color: #ced6e0;
+            color: #57606f;
+        }
+        .matched .dot {
+            background-color: #2ed573;
+        }
+        /* SVG canvas for drawing lines */
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        line {
+            stroke: #3498db;
+            stroke-width: 3;
+            stroke-linecap: round;
+            opacity: 0.8;
+        }
+        line.correct-line {
+            stroke: #2ecc71;
+            stroke-width: 3;
+        }
+        line.incorrect-line {
+            stroke: #e74c3c;
+            stroke-dasharray: 5,5;
+            stroke-width: 2;
+        }
+        /* Validation Feedback styles */
+        .correct-box {
+            background-color: #d4edda !important;
+            border-color: #c3e6cb !important;
+            color: #155724 !important;
+        }
+        .incorrect-box {
+            background-color: #f8d7da !important;
+            border-color: #f5c6cb !important;
+            color: #721c24 !important;
+        }
+        .feedback-text {
+            font-size: 11px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-top: 4px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🖱️ เกมจับคู่แบบกดลากเส้นโยงคู่คำศัพท์ (51 ความหมาย)</h1>
+    <p class="subtitle">คลิกที่กล่องคำศัพท์ฝั่งซ้าย แล้วคลิกเลือกคำตอบฝั่งขวาเพื่อโยงเส้นจับคู่ได้ทันที!</p>
+    
+    <div class="instructions">
+        <strong>🎮 วิธีการเล่นแบบลากโยงเส้นจับคู่ (พร้อมระบบตัดช้อยส์อัตโนมัติ):</strong>
+        <br>1. <b>การจับคู่:</b> คลิกที่คำศัพท์ฝั่งซ้าย 1 ครั้ง (กล่องจะเปลี่ยนเป็นสีฟ้า) จากนั้นให้คลิกเลือกความหมายที่ถูกต้องทางฝั่งขวา เส้นเชื่อมโยงจะถูกลากให้ทันที!
+        <br>2. <b>การยกเลิก/เปลี่ยนคู่:</b> หากต้องการยกเลิกเส้นที่เชื่อมไปแล้ว ให้คลิกที่คำศัพท์ฝั่งซ้ายนั้นซ้ำอีกครั้ง หรือคลิกเลือกคำศัพท์นั้นแล้วไปโยงหาความหมายใหม่ได้ทันที (คู่เก่าจะหลุดและตัดช้อยส์ให้ใหม่)
+        <br>3. <b>การตัดช้อยส์:</b> ช้อยส์ความหมายฝั่งขวาที่ถูกเลือกจับคู่ไปแล้ว จะเปลี่ยนสถานะเพื่อให้คุณเห็นภาพรวมและตัดตัวเลือกออกได้อย่างง่ายดาย
+        <br>4. กดปุ่ม <b>"Check Answer"</b> เพื่อตรวจคำตอบ เส้นคู่ที่ถูกจะเป็นสีเขียว เส้นคู่ที่ผิดจะเป็นเส้นประสีแดง พร้อมแสดงแถบเฉลยคำตอบใต้ข้อที่ผิด
+    </div>
+
+    <div class="control-panel">
+        <button class="btn-check" onclick="checkAnswers()">Check Answer (ตรวจคำตอบ)</button>
+        <button class="btn-shuffle" onclick="initGame()">Shuffle / Reset (สลับช้อยส์ใหม่)</button>
+        <div class="score-display" id="scoreDisplay">คะแนน: -- / 51</div>
+    </div>
+
+    <div class="game-layout" id="gameLayout">
+        <svg id="svgCanvas"></svg>
+
+        <!-- Left Column -->
+        <div>
+            <div class="column-title">🔍 คำศัพท์ (คลิกข้อนี้ก่อน)</div>
+            <div class="word-list" id="wordList"></div>
+        </div>
+
+        <!-- Right Column -->
+        <div>
+            <div class="column-title">📚 ความหมายคำศัพท์ (คลิกเพื่อโยงเส้น)</div>
+            <div class="def-list" id="defList"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const masterData = [
+    {"id": 1, "word": "Candid", "type": "adj.", "def": "direct, blunt"},
+    {"id": 2, "word": "Candor", "type": "n.", "def": "the trait of being honest and frank"},
+    {"id": 3, "word": "Capitalize", "type": "v.", "def": "to use to your advantage"},
+    {"id": 4, "word": "Capture (1)", "type": "v.", "def": "to trap or take possession of"},
+    {"id": 5, "word": "Capture (2)", "type": "v.", "def": "to successfully represent or imitate"},
+    {"id": 6, "word": "Capture (3)", "type": "v.", "def": "to captivate, mesmerize"},
+    {"id": 7, "word": "Capture (4)", "type": "v.", "def": "to catch or seize"},
+    {"id": 8, "word": "Civic", "type": "adj.", "def": "relating to the city or citizens"},
+    {"id": 9, "word": "Clinical", "type": "adj.", "def": "emotionally unattached (usu. used in medical or scientific setting)"},
+    {"id": 10, "word": "Clout", "type": "n.", "def": "special advantage or power"},
+    {"id": 11, "word": "Coarse (1)", "type": "adj.", "def": "indicating a rough texture"},
+    {"id": 12, "word": "Coarse (2)", "type": "adj.", "def": "lacking refinement or sophistication"},
+    {"id": 13, "word": "Coincide", "type": "v.", "def": "to happen at the same time"},
+    {"id": 14, "word": "Commission", "type": "n.", "def": "the use of payment to request something (e.g., a service or product)"},
+    {"id": 15, "word": "Comparable", "type": "adj.", "def": "able to be compared"},
+    {"id": 16, "word": "Competent", "type": "adj.", "def": "sufficiently qualified"},
+    {"id": 17, "word": "Complacent", "type": "adj.", "def": "satisfied, with no desire to change or improve"},
+    {"id": 18, "word": "Complement", "type": "v.", "def": "to make perfect or complete"},
+    {"id": 19, "word": "Concede (1)", "type": "v.", "def": "to be forced to agree or surrender"},
+    {"id": 20, "word": "Concede (2)", "type": "v.", "def": "to admit to a transgression"},
+    {"id": 21, "word": "Conceive", "type": "v.", "def": "to imagine or come up with"},
+    {"id": 22, "word": "Condone", "type": "v.", "def": "to overlook, approve, or allow"},
+    {"id": 23, "word": "Conducive", "type": "adj.", "def": "able to bring about or be suitable for"},
+    {"id": 24, "word": "Conduct (1)", "type": "v.", "def": "to control or manage"},
+    {"id": 25, "word": "Conduct (2)", "type": "v.", "def": "to behave a certain way"},
+    {"id": 26, "word": "Confide", "type": "v.", "def": "to share something secretive with someone"},
+    {"id": 27, "word": "Confine", "type": "v.", "def": "to put limits on; to restrict"},
+    {"id": 28, "word": "Consensus", "type": "n.", "def": "overall agreement"},
+    {"id": 29, "word": "Constitute", "type": "v.", "def": "to form or compose (part of) something"},
+    {"id": 30, "word": "Contemplate", "type": "v.", "def": "to think deeply about"},
+    {"id": 31, "word": "Contend", "type": "v.", "def": "to maintain or assert (an opinion)"},
+    {"id": 32, "word": "Contradict", "type": "v.", "def": "to be in contrast with"},
+    {"id": 33, "word": "Controversial", "type": "adj.", "def": "highly debatable and causing contention"},
+    {"id": 34, "word": "Conventional", "type": "adj.", "def": "abiding by accepted standards"},
+    {"id": 35, "word": "Convey", "type": "v.", "def": "to pass on or transfer (information)"},
+    {"id": 36, "word": "Conviction", "type": "n.", "def": "a firm belief in something"},
+    {"id": 37, "word": "Corroborate", "type": "v.", "def": "to provide evidence for; to back up (a claim)"},
+    {"id": 38, "word": "Counteract", "type": "v.", "def": "to work in opposition to"},
+    {"id": 39, "word": "Counterargument", "type": "n.", "def": "an argument used to criticize or dismantle another argument"},
+    {"id": 40, "word": "Counterproductive", "type": "adj.", "def": "hindering the achievement of a goal"},
+    {"id": 41, "word": "Culmination", "type": "n.", "def": "the final act or climax"},
+    {"id": 42, "word": "Cultivate", "type": "v.", "def": "to foster the growth of"},
+    {"id": 43, "word": "Decree", "type": "v.", "def": "to declare formally and with authority"},
+    {"id": 44, "word": "Deference", "type": "n.", "def": "respect; regard"},
+    {"id": 45, "word": "Deficient", "type": "adj.", "def": "not enough in degree or amount"},
+    {"id": 46, "word": "Demonstrate (1)", "type": "v.", "def": "to do as an example"},
+    {"id": 47, "word": "Demonstrate (2)", "type": "v.", "def": "gives evidence for"},
+    {"id": 48, "word": "Demur", "type": "v.", "def": "to object to"},
+    {"id": 49, "word": "Deplete", "type": "v.", "def": "to (over)use over time (usu. resources)"},
+    {"id": 50, "word": "Desolate", "type": "adj.", "def": "bare, barren, empty"},
+    {"id": 51, "word": "Devise", "type": "v.", "def": "to come up with (a plan)"}
+];
+
+let selectedWordId = null;
+let currentMatches = {}; // Key: WordId, Value: DefId
+let shuffledDefs = [];
+let isChecked = false;
+
+function shuffleArray(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function initGame() {
+    selectedWordId = null;
+    currentMatches = {};
+    isChecked = false;
+    shuffledDefs = shuffleArray(masterData);
+    
+    document.getElementById('scoreDisplay').innerText = "คะแนน: -- / 51";
+    document.getElementById('svgCanvas').innerHTML = '';
+    
+    const wordList = document.getElementById('wordList');
+    const defList = document.getElementById('defList');
+    wordList.innerHTML = '';
+    defList.innerHTML = '';
+    
+    // Render Words
+    masterData.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'word-item';
+        div.id = `word-${item.id}`;
+        div.onclick = () => selectWord(item.id);
+        
+        const cleanWord = item.word.replace(/\s\(\d+\)/, '');
+        div.innerHTML = `
+            <div>
+                <span class="word-label">${cleanWord}</span>
+                <span class="word-type">${item.type}</span>
+                <div class="feedback-text" id="fb-${item.id}">เฉลย: ${item.def}</div>
+            </div>
+            <div class="dot"></div>
+        `;
+        wordList.appendChild(div);
+    });
+    
+    // Render Definitions
+    shuffledDefs.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'def-item';
+        div.id = `def-${item.id}`;
+        div.onclick = () => selectDef(item.id);
+        div.innerHTML = `
+            <div class="dot"></div>
+            <div style="padding-left: 10px;"><b>[${item.type}]</b> ${item.def}</div>
+        `;
+        defList.appendChild(div);
+    });
+    
+    // Listen to window resize to redraw lines
+    window.removeEventListener('resize', drawLines);
+    window.addEventListener('resize', drawLines);
+}
+
+function selectWord(wordId) {
+    if (isChecked) return;
+    
+    // If clicking the same word already highlighted, deselect it
+    if (selectedWordId === wordId) {
+        document.getElementById(`word-${wordId}`).classList.remove('selected');
+        // Also remove if it was matched
+        if (currentMatches[wordId]) {
+            delete currentMatches[wordId];
+            updateStyles();
+            drawLines();
+        }
+        selectedWordId = null;
+        return;
+    }
+    
+    // Clear previous word selection styling
+    if (selectedWordId) {
+        document.getElementById(`word-${selectedWordId}`).classList.remove('selected');
+    }
+    
+    selectedWordId = wordId;
+    document.getElementById(`word-${wordId}`).classList.add('selected');
+}
+
+function selectDef(defId) {
+    if (isChecked || !selectedWordId) return;
+    
+    // Check if this definition is already paired with another word, if so, break that old pair
+    for (let wId in currentMatches) {
+        if (currentMatches[wId] === defId) {
+            delete currentMatches[wId];
+        }
+    }
+    
+    // Establish pair
+    currentMatches[selectedWordId] = defId;
+    
+    // Deselect current word
+    document.getElementById(`word-${selectedWordId}`).classList.remove('selected');
+    selectedWordId = null;
+    
+    updateStyles();
+    drawLines();
+}
+
+function updateStyles() {
+    // Clear all states
+    masterData.forEach(item => {
+        document.getElementById(`word-${item.id}`).classList.remove('matched');
+        document.getElementById(`def-${item.id}`).classList.remove('matched');
+    });
+    
+    // Reapply based on active matches
+    for (let wId in currentMatches) {
+        const dId = currentMatches[wId];
+        document.getElementById(`word-${wId}`).classList.add('matched');
+        document.getElementById(`def-${dId}`).classList.add('matched');
+    }
+}
+
+function drawLines() {
+    const svg = document.getElementById('svgCanvas');
+    svg.innerHTML = '';
+    
+    const containerRect = document.getElementById('gameLayout').getBoundingClientRect();
+    
+    for (let wId in currentMatches) {
+        const dId = currentMatches[wId];
+        
+        const wordEl = document.getElementById(`word-${wId}`);
+        const defEl = document.getElementById(`def-${dId}`);
+        
+        if (!wordEl || !defEl) continue;
+        
+        const wordDot = wordEl.querySelector('.dot').getBoundingClientRect();
+        const defDot = defEl.querySelector('.dot').getBoundingClientRect();
+        
+        const x1 = wordDot.left - containerRect.left + 6;
+        const y1 = wordDot.top - containerRect.top + 6;
+        const x2 = defDot.left - containerRect.left + 6;
+        const y2 = defDot.top - containerRect.top + 6;
+        
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        
+        if (isChecked) {
+            if (wId == dId) {
+                line.setAttribute('class', 'correct-line');
+            } else {
+                line.setAttribute('class', 'incorrect-line');
+            }
+        }
+        
+        svg.appendChild(line);
+    }
+}
+
+function checkAnswers() {
+    if (isChecked) return;
+    isChecked = true;
+    let score = 0;
+    
+    masterData.forEach(item => {
+        const wordBox = document.getElementById(`word-${item.id}`);
+        const feedback = document.getElementById(`fb-${item.id}`);
+        const pairedDefId = currentMatches[item.id];
+        
+        if (pairedDefId == item.id) {
+            score++;
+            wordBox.classList.add('correct-box');
+        } else {
+            wordBox.classList.add('incorrect-box');
+            feedback.style.display = 'block';
+            
+            // Highlight the correct definition box in subtle green for help
+            const correctDefBox = document.getElementById(`def-${item.id}`);
+            if (correctDefBox) correctDefBox.classList.add('correct-box');
+        }
+    });
+    
+    document.getElementById('scoreDisplay').innerText = `คะแนน: ${score} / 51`;
+    drawLines();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// Automatically start game
+window.onload = initGame;
+</script>
+
+</body>
+</html>
