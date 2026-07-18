@@ -86,13 +86,6 @@
             gap: 50px;
             position: relative;
         }
-        @media (max-width: 900px) {
-            .game-layout {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            svg { display: none; } /* Hide lines on small screen if layout wraps */
-        }
         .column-title {
             font-size: 18px;
             font-weight: bold;
@@ -116,6 +109,8 @@
             cursor: pointer;
             position: relative;
             transition: all 0.2s;
+            min-height: 44px;
+            box-sizing: border-box;
         }
         .word-item:hover, .def-item:hover {
             border-color: #3498db;
@@ -147,7 +142,6 @@
         .def-item .dot {
             left: -6px;
         }
-        /* Connection styles */
         .selected {
             background-color: #e8f4fd !important;
             border-color: #3498db !important;
@@ -164,7 +158,6 @@
         .matched .dot {
             background-color: #2ed573;
         }
-        /* SVG canvas for drawing lines */
         svg {
             position: absolute;
             top: 0;
@@ -186,10 +179,9 @@
         }
         line.incorrect-line {
             stroke: #e74c3c;
-            stroke-dasharray: 5,5;
             stroke-width: 2;
+            stroke-dasharray: 5,5;
         }
-        /* Validation Feedback styles */
         .correct-box {
             background-color: #d4edda !important;
             border-color: #c3e6cb !important;
@@ -207,26 +199,78 @@
             margin-top: 4px;
             display: none;
         }
+
+        /* ปรับปรุงสไตล์สำหรับหน้าจอมือถือ */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+            .instructions {
+                font-size: 12px;
+                padding: 10px;
+            }
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+                position: static;
+                gap: 8px;
+                padding: 8px;
+            }
+            .score-display {
+                justify-content: center;
+                font-size: 16px;
+            }
+            button {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            .game-layout {
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+            .column-title {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+            .word-item, .def-item {
+                padding: 8px 10px;
+                font-size: 12px;
+                gap: 4px;
+            }
+            .word-type {
+                font-size: 10px;
+                margin-left: 0;
+                display: block;
+            }
+            .feedback-text {
+                font-size: 10px;
+            }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🖱️ เกมจับคู่แบบกดลากเส้นโยงคู่คำศัพท์ (51 ความหมาย)</h1>
-    <p class="subtitle">คลิกที่กล่องคำศัพท์ฝั่งซ้าย แล้วคลิกเลือกคำตอบฝั่งขวาเพื่อโยงเส้นจับคู่ได้ทันที!</p>
+    <h1>🖱️ เกมจับคู่แบบกดลากเส้นโยงคู่คำศัพท์ (45 ความหมาย)</h1>
+    <p class="subtitle">คลิกเลือกกล่องคำศัพท์ฝั่งซ้ายหรือความหมายฝั่งขวา เพื่อจับคู่โยงเส้นได้ทันที!</p>
     
     <div class="instructions">
-        <strong>🎮 วิธีการเล่นแบบลากโยงเส้นจับคู่ (พร้อมระบบตัดช้อยส์อัตโนมัติ):</strong>
-        <br>1. <b>การจับคู่:</b> คลิกที่คำศัพท์ฝั่งซ้าย 1 ครั้ง (กล่องจะเปลี่ยนเป็นสีฟ้า) จากนั้นให้คลิกเลือกความหมายที่ถูกต้องทางฝั่งขวา เส้นเชื่อมโยงจะถูกลากให้ทันที!
-        <br>2. <b>การยกเลิก/เปลี่ยนคู่:</b> หากต้องการยกเลิกเส้นที่เชื่อมไปแล้ว ให้คลิกที่คำศัพท์ฝั่งซ้ายนั้นซ้ำอีกครั้ง หรือคลิกเลือกคำศัพท์นั้นแล้วไปโยงหาความหมายใหม่ได้ทันที (คู่เก่าจะหลุดและตัดช้อยส์ให้ใหม่)
-        <br>3. <b>การตัดช้อยส์:</b> ช้อยส์ความหมายฝั่งขวาที่ถูกเลือกจับคู่ไปแล้ว จะเปลี่ยนสถานะเพื่อให้คุณเห็นภาพรวมและตัดตัวเลือกออกได้อย่างง่ายดาย
-        <br>4. กดปุ่ม <b>"Check Answer"</b> เพื่อตรวจคำตอบ เส้นคู่ที่ถูกจะเป็นสีเขียว เส้นคู่ที่ผิดจะเป็นเส้นประสีแดง พร้อมแสดงแถบเฉลยคำตอบใต้ข้อที่ผิด
+        <strong>🎮 วิธีการเล่นแบบลากโยงเส้นจับคู่ (ตรวจคำตอบอิสระ ไม่ล็อกลำดับ ID):</strong>
+        <br>1. <b>การจับคู่แบบสองทิศทาง:</b> คุณสามารถคลิกเลือกที่คำศัพท์ (ซ้าย) หรือความหมาย (ขวา) ก่อนก็ได้ จากนั้นไปคลิกอีกฝั่งเพื่อลากเส้นเชื่อมโยงได้เลยครับ
+        <br>2. <b>การแก้ไขคู่:</b> หากต้องการแก้คู่เดิม ให้กดคลิกที่กล่องที่ถูกเชื่อมไปแล้ว เส้นเก่าจะหลุดออกทันที และกล่องนั้นจะกลายเป็นสีฟ้าเพื่อให้คุณเลือกโยงเส้นใหม่ได้ทันทีครับ
+        <br>3. <b>ระบบยืดหยุ่นความหมายซ้ำ:</b> สำหรับคำศัพท์ที่มีหลายความหมาย (เช่น Modest) คุณสามารถโยงคู่สลับกล่องกันได้อิสระตามความเข้าใจของมนุษย์ ระบบจะนับว่าถูกต้องทั้งหมดครับ!
     </div>
 
     <div class="control-panel">
         <button class="btn-check" onclick="checkAnswers()">Check Answer (ตรวจคำตอบ)</button>
         <button class="btn-shuffle" onclick="initGame()">Shuffle / Reset (สลับช้อยส์ใหม่)</button>
-        <div class="score-display" id="scoreDisplay">คะแนน: -- / 51</div>
+        <div class="score-display" id="scoreDisplay">คะแนน: -- / 45</div>
     </div>
 
     <div class="game-layout" id="gameLayout">
@@ -234,13 +278,13 @@
 
         <!-- Left Column -->
         <div>
-            <div class="column-title">🔍 คำศัพท์ (คลิกข้อนี้ก่อน)</div>
+            <div class="column-title">🔍 คำศัพท์</div>
             <div class="word-list" id="wordList"></div>
         </div>
 
         <!-- Right Column -->
         <div>
-            <div class="column-title">📚 ความหมายคำศัพท์ (คลิกเพื่อโยงเส้น)</div>
+            <div class="column-title">📚 ความหมายคำศัพท์</div>
             <div class="def-list" id="defList"></div>
         </div>
     </div>
@@ -248,60 +292,55 @@
 
 <script>
 const masterData = [
-    {"id": 1, "word": "Candid", "type": "adj.", "def": "direct, blunt"},
-    {"id": 2, "word": "Candor", "type": "n.", "def": "the trait of being honest and frank"},
-    {"id": 3, "word": "Capitalize", "type": "v.", "def": "to use to your advantage"},
-    {"id": 4, "word": "Capture (1)", "type": "v.", "def": "to trap or take possession of"},
-    {"id": 5, "word": "Capture (2)", "type": "v.", "def": "to successfully represent or imitate"},
-    {"id": 6, "word": "Capture (3)", "type": "v.", "def": "to captivate, mesmerize"},
-    {"id": 7, "word": "Capture (4)", "type": "v.", "def": "to catch or seize"},
-    {"id": 8, "word": "Civic", "type": "adj.", "def": "relating to the city or citizens"},
-    {"id": 9, "word": "Clinical", "type": "adj.", "def": "emotionally unattached (usu. used in medical or scientific setting)"},
-    {"id": 10, "word": "Clout", "type": "n.", "def": "special advantage or power"},
-    {"id": 11, "word": "Coarse (1)", "type": "adj.", "def": "indicating a rough texture"},
-    {"id": 12, "word": "Coarse (2)", "type": "adj.", "def": "lacking refinement or sophistication"},
-    {"id": 13, "word": "Coincide", "type": "v.", "def": "to happen at the same time"},
-    {"id": 14, "word": "Commission", "type": "n.", "def": "the use of payment to request something (e.g., a service or product)"},
-    {"id": 15, "word": "Comparable", "type": "adj.", "def": "able to be compared"},
-    {"id": 16, "word": "Competent", "type": "adj.", "def": "sufficiently qualified"},
-    {"id": 17, "word": "Complacent", "type": "adj.", "def": "satisfied, with no desire to change or improve"},
-    {"id": 18, "word": "Complement", "type": "v.", "def": "to make perfect or complete"},
-    {"id": 19, "word": "Concede (1)", "type": "v.", "def": "to be forced to agree or surrender"},
-    {"id": 20, "word": "Concede (2)", "type": "v.", "def": "to admit to a transgression"},
-    {"id": 21, "word": "Conceive", "type": "v.", "def": "to imagine or come up with"},
-    {"id": 22, "word": "Condone", "type": "v.", "def": "to overlook, approve, or allow"},
-    {"id": 23, "word": "Conducive", "type": "adj.", "def": "able to bring about or be suitable for"},
-    {"id": 24, "word": "Conduct (1)", "type": "v.", "def": "to control or manage"},
-    {"id": 25, "word": "Conduct (2)", "type": "v.", "def": "to behave a certain way"},
-    {"id": 26, "word": "Confide", "type": "v.", "def": "to share something secretive with someone"},
-    {"id": 27, "word": "Confine", "type": "v.", "def": "to put limits on; to restrict"},
-    {"id": 28, "word": "Consensus", "type": "n.", "def": "overall agreement"},
-    {"id": 29, "word": "Constitute", "type": "v.", "def": "to form or compose (part of) something"},
-    {"id": 30, "word": "Contemplate", "type": "v.", "def": "to think deeply about"},
-    {"id": 31, "word": "Contend", "type": "v.", "def": "to maintain or assert (an opinion)"},
-    {"id": 32, "word": "Contradict", "type": "v.", "def": "to be in contrast with"},
-    {"id": 33, "word": "Controversial", "type": "adj.", "def": "highly debatable and causing contention"},
-    {"id": 34, "word": "Conventional", "type": "adj.", "def": "abiding by accepted standards"},
-    {"id": 35, "word": "Convey", "type": "v.", "def": "to pass on or transfer (information)"},
-    {"id": 36, "word": "Conviction", "type": "n.", "def": "a firm belief in something"},
-    {"id": 37, "word": "Corroborate", "type": "v.", "def": "to provide evidence for; to back up (a claim)"},
-    {"id": 38, "word": "Counteract", "type": "v.", "def": "to work in opposition to"},
-    {"id": 39, "word": "Counterargument", "type": "n.", "def": "an argument used to criticize or dismantle another argument"},
-    {"id": 40, "word": "Counterproductive", "type": "adj.", "def": "hindering the achievement of a goal"},
-    {"id": 41, "word": "Culmination", "type": "n.", "def": "the final act or climax"},
-    {"id": 42, "word": "Cultivate", "type": "v.", "def": "to foster the growth of"},
-    {"id": 43, "word": "Decree", "type": "v.", "def": "to declare formally and with authority"},
-    {"id": 44, "word": "Deference", "type": "n.", "def": "respect; regard"},
-    {"id": 45, "word": "Deficient", "type": "adj.", "def": "not enough in degree or amount"},
-    {"id": 46, "word": "Demonstrate (1)", "type": "v.", "def": "to do as an example"},
-    {"id": 47, "word": "Demonstrate (2)", "type": "v.", "def": "gives evidence for"},
-    {"id": 48, "word": "Demur", "type": "v.", "def": "to object to"},
-    {"id": 49, "word": "Deplete", "type": "v.", "def": "to (over)use over time (usu. resources)"},
-    {"id": 50, "word": "Desolate", "type": "adj.", "def": "bare, barren, empty"},
-    {"id": 51, "word": "Devise", "type": "v.", "def": "to come up with (a plan)"}
+    {"id": 1, "word": "Frankly", "type": "adv.", "def": "directly, clearly"},
+    {"id": 2, "word": "Freewheeling", "type": "adj.", "def": "carefree"},
+    {"id": 3, "word": "Fundamental", "type": "adj.", "def": "the most essential or most basic part"},
+    {"id": 4, "word": "Galvanizing", "type": "adj.", "def": "thrilling, exciting, stimulating"},
+    {"id": 5, "word": "Geriatric", "type": "adj.", "def": "relating to old age"},
+    {"id": 6, "word": "Hostile", "type": "adj.", "def": "harmful, dangerous"},
+    {"id": 7, "word": "Hypothetical", "type": "adj.", "def": "supposed; related to a hypothesis"},
+    {"id": 8, "word": "Ignominious", "type": "adj.", "def": "publicly shameful or humiliating"},
+    {"id": 9, "word": "Impart", "type": "v.", "def": "to transmit, bestow, or disclose"},
+    {"id": 10, "word": "Impartiality", "type": "n.", "def": "the equal and objective treatment of opposing views"},
+    {"id": 11, "word": "Imposing", "type": "adj.", "def": "impressive (esp. in size or appearance)"},
+    {"id": 12, "word": "Imposition", "type": "n.", "def": "an unnecessary burden"},
+    {"id": 13, "word": "Imprudent", "type": "adj.", "def": "not cautious or prudent; rash"},
+    {"id": 14, "word": "Incite", "type": "v.", "def": "to encourage or stir up"},
+    {"id": 15, "word": "Indifference", "type": "n.", "def": "apathy, emotional detachment"},
+    {"id": 16, "word": "Indiscriminately", "type": "adv.", "def": "randomly; with little or no distinction"},
+    {"id": 17, "word": "Indulge", "type": "v.", "def": "to give into; to satisfy or gratify"},
+    {"id": 18, "word": "Infer", "type": "v.", "def": "to guess, conclude, or derive by reasoning"},
+    {"id": 19, "word": "Innovative", "type": "adj.", "def": "novel or new (esp. as an idea or invention)"},
+    {"id": 20, "word": "Insatiable", "type": "adj.", "def": "can’t be satisfied"},
+    {"id": 21, "word": "Inversion", "type": "n.", "def": "a reversal"},
+    {"id": 22, "word": "Invoke", "type": "v.", "def": "to call on; to appeal to (e.g., a higher power)"},
+    {"id": 23, "word": "Irreconcilable", "type": "adj.", "def": "incapable of being in harmony or agreed upon"},
+    {"id": 24, "word": "Lament", "type": "v.", "def": "to feel sorrow for; to mourn"},
+    {"id": 25, "word": "Locomotion", "type": "n.", "def": "movement"},
+    {"id": 26, "word": "Lucrative", "type": "adj.", "def": "capable of making a lot of money; profitable"},
+    {"id": 27, "word": "Malicious", "type": "adj.", "def": "harmful, spiteful"},
+    {"id": 28, "word": "Malleable", "type": "adj.", "def": "capable of being molded or changed"},
+    {"id": 29, "word": "Materialistic", "type": "adj.", "def": "superficial; focus on material possessions"},
+    {"id": 30, "word": "Melodramatic", "type": "adj.", "def": "extravagant or exaggerated (as of a melodrama)"},
+    {"id": 31, "word": "Modest", "type": "adj.", "def": "simple and humble"},
+    {"id": 32, "word": "Modest", "type": "adj.", "def": "small in size or amount"},
+    {"id": 33, "word": "Modify", "type": "v.", "def": "to change, alter, or tweak"},
+    {"id": 34, "word": "Momentous", "type": "adj.", "def": "historically significant"},
+    {"id": 35, "word": "Novel", "type": "adj.", "def": "new, innovative"},
+    {"id": 36, "word": "Nuance", "type": "n.", "def": "a subtle difference in meaning"},
+    {"id": 37, "word": "Null", "type": "adj.", "def": "legally void and ineffective"},
+    {"id": 38, "word": "Objectivity", "type": "n.", "def": "judgment based on observations instead of emotions or opinions"},
+    {"id": 39, "word": "Obsolete", "type": "adj.", "def": "no longer used; rare or uncommon"},
+    {"id": 40, "word": "Omnipotent", "type": "adj.", "def": "almighty and all powerful"},
+    {"id": 41, "word": "Onset", "type": "n.", "def": "the beginning or early stages"},
+    {"id": 42, "word": "Opine", "type": "v.", "def": "to openly express an opinion"},
+    {"id": 43, "word": "Ornate", "type": "adj.", "def": "highly detailed and decorated"},
+    {"id": 44, "word": "Oust", "type": "v.", "def": "to remove or force out of (usu. a position or office)"},
+    {"id": 45, "word": "Paramount", "type": "adj.", "def": "predominant, superior, most important"}
 ];
 
 let selectedWordId = null;
+let selectedDefId = null;
 let currentMatches = {}; // Key: WordId, Value: DefId
 let shuffledDefs = [];
 let isChecked = false;
@@ -317,11 +356,12 @@ function shuffleArray(array) {
 
 function initGame() {
     selectedWordId = null;
+    selectedDefId = null;
     currentMatches = {};
     isChecked = false;
     shuffledDefs = shuffleArray(masterData);
     
-    document.getElementById('scoreDisplay').innerText = "คะแนน: -- / 51";
+    document.getElementById('scoreDisplay').innerText = `คะแนน: -- / ${masterData.length}`;
     document.getElementById('svgCanvas').innerHTML = '';
     
     const wordList = document.getElementById('wordList');
@@ -336,10 +376,9 @@ function initGame() {
         div.id = `word-${item.id}`;
         div.onclick = () => selectWord(item.id);
         
-        const cleanWord = item.word.replace(/\s\(\d+\)/, '');
         div.innerHTML = `
             <div>
-                <span class="word-label">${cleanWord}</span>
+                <span class="word-label">${item.word}</span>
                 <span class="word-type">${item.type}</span>
                 <div class="feedback-text" id="fb-${item.id}">เฉลย: ${item.def}</div>
             </div>
@@ -361,7 +400,6 @@ function initGame() {
         defList.appendChild(div);
     });
     
-    // Listen to window resize to redraw lines
     window.removeEventListener('resize', drawLines);
     window.addEventListener('resize', drawLines);
 }
@@ -369,61 +407,86 @@ function initGame() {
 function selectWord(wordId) {
     if (isChecked) return;
     
-    // If clicking the same word already highlighted, deselect it
-    if (selectedWordId === wordId) {
-        document.getElementById(`word-${wordId}`).classList.remove('selected');
-        // Also remove if it was matched
-        if (currentMatches[wordId]) {
-            delete currentMatches[wordId];
-            updateStyles();
-            drawLines();
-        }
+    if (currentMatches[wordId]) {
+        delete currentMatches[wordId];
+        selectedWordId = wordId;
+        selectedDefId = null;
+    } 
+    else if (selectedWordId === wordId) {
         selectedWordId = null;
-        return;
+    } 
+    else if (selectedDefId) {
+        for (let wId in currentMatches) {
+            if (currentMatches[wId] === selectedDefId) delete currentMatches[wId];
+        }
+        currentMatches[wordId] = selectedDefId;
+        selectedDefId = null;
+        selectedWordId = null;
+    } 
+    else {
+        selectedWordId = wordId;
     }
     
-    // Clear previous word selection styling
-    if (selectedWordId) {
-        document.getElementById(`word-${selectedWordId}`).classList.remove('selected');
-    }
-    
-    selectedWordId = wordId;
-    document.getElementById(`word-${wordId}`).classList.add('selected');
+    updateStyles();
+    drawLines();
 }
 
 function selectDef(defId) {
-    if (isChecked || !selectedWordId) return;
+    if (isChecked) return;
     
-    // Check if this definition is already paired with another word, if so, break that old pair
+    let initialWordId = null;
     for (let wId in currentMatches) {
         if (currentMatches[wId] === defId) {
-            delete currentMatches[wId];
+            initialWordId = wId;
+            break;
         }
     }
     
-    // Establish pair
-    currentMatches[selectedWordId] = defId;
-    
-    // Deselect current word
-    document.getElementById(`word-${selectedWordId}`).classList.remove('selected');
-    selectedWordId = null;
+    if (initialWordId) {
+        delete currentMatches[initialWordId];
+        selectedDefId = defId;
+        selectedWordId = null;
+    }
+    else if (selectedDefId === defId) {
+        selectedDefId = null;
+    }
+    else if (selectedWordId) {
+        delete currentMatches[selectedWordId];
+        currentMatches[selectedWordId] = defId;
+        selectedWordId = null;
+        selectedDefId = null;
+    }
+    else {
+        selectedDefId = defId;
+    }
     
     updateStyles();
     drawLines();
 }
 
 function updateStyles() {
-    // Clear all states
     masterData.forEach(item => {
-        document.getElementById(`word-${item.id}`).classList.remove('matched');
-        document.getElementById(`def-${item.id}`).classList.remove('matched');
+        const wEl = document.getElementById(`word-${item.id}`);
+        const dEl = document.getElementById(`def-${item.id}`);
+        if (wEl) wEl.classList.remove('matched', 'selected');
+        if (dEl) dEl.classList.remove('matched', 'selected');
     });
     
-    // Reapply based on active matches
+    if (selectedWordId) {
+        const wEl = document.getElementById(`word-${selectedWordId}`);
+        if (wEl) wEl.classList.add('selected');
+    }
+    if (selectedDefId) {
+        const dEl = document.getElementById(`def-${selectedDefId}`);
+        if (dEl) dEl.classList.add('selected');
+    }
+    
     for (let wId in currentMatches) {
         const dId = currentMatches[wId];
-        document.getElementById(`word-${wId}`).classList.add('matched');
-        document.getElementById(`def-${dId}`).classList.add('matched');
+        const wEl = document.getElementById(`word-${wId}`);
+        const dEl = document.getElementById(`def-${dId}`);
+        if (wEl) wEl.classList.add('matched');
+        if (dEl) dEl.classList.add('matched');
     }
 }
 
@@ -456,7 +519,11 @@ function drawLines() {
         line.setAttribute('y2', y2);
         
         if (isChecked) {
-            if (wId == dId) {
+            // ระบบตรวจจับคู่ด้วยชื่อคำศัพท์ (ไม่ใช่แค่เช็ก ID)
+            const wordData = masterData.find(m => m.id == wId);
+            const defData = masterData.find(m => m.id == dId);
+            
+            if (wordData && defData && wordData.word.toLowerCase() === defData.word.toLowerCase()) {
                 line.setAttribute('class', 'correct-line');
             } else {
                 line.setAttribute('class', 'incorrect-line');
@@ -477,25 +544,33 @@ function checkAnswers() {
         const feedback = document.getElementById(`fb-${item.id}`);
         const pairedDefId = currentMatches[item.id];
         
-        if (pairedDefId == item.id) {
-            score++;
-            wordBox.classList.add('correct-box');
+        if (pairedDefId) {
+            const pairedDefTarget = masterData.find(m => m.id == pairedDefId);
+            // ถ้าชื่อคำศัพท์ของความหมายฝั่งขวา ตรงกับกล่องคำศัพท์ฝั่งซ้าย = ถูกต้อง!
+            if (pairedDefTarget && pairedDefTarget.word.toLowerCase() === item.word.toLowerCase()) {
+                score++;
+                wordBox.classList.add('correct-box');
+            } else {
+                wordBox.classList.add('incorrect-box');
+                feedback.style.display = 'block';
+                
+                const correctDefBox = document.getElementById(`def-${item.id}`);
+                if (correctDefBox) correctDefBox.classList.add('correct-box');
+            }
         } else {
             wordBox.classList.add('incorrect-box');
             feedback.style.display = 'block';
             
-            // Highlight the correct definition box in subtle green for help
             const correctDefBox = document.getElementById(`def-${item.id}`);
             if (correctDefBox) correctDefBox.classList.add('correct-box');
         }
     });
     
-    document.getElementById('scoreDisplay').innerText = `คะแนน: ${score} / 51`;
+    document.getElementById('scoreDisplay').innerText = `คะแนน: ${score} / ${masterData.length}`;
     drawLines();
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
-// Automatically start game
 window.onload = initGame;
 </script>
 
